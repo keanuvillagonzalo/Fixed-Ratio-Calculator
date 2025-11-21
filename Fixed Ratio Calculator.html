@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Dynamic Gray Box</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: sans-serif;
+    margin: 40px;
+  }
+
+  .drag-number {
+    display: inline-block;
+    padding: 6px 10px;
+    border: 1px solid #444;
+    user-select: none;
+    cursor: ew-resize;
+    width: fit-content;
+    margin-right: 12px;
+  }
+
+  .difference, .set-btn {
+    padding: 6px 12px;
+    cursor: pointer;
+    border: 1px solid #444;
+    margin: 6px;
+  }
+
+  #grayBox {
+    margin-top: 20px;
+    background-color: gray;
+  }
+
+  .row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="row">
+  <div class="drag-number" id="dragA">0</div>
+  <div class="drag-number" id="dragB">0</div>
+</div>
+
+<div class="row">
+  <button class="difference" id="diffBtn">Calculate Difference</button>
+  <div id="diffResult"></div>
+</div>
+
+<div class="row">
+  <button class="set-btn" id="setA">Set Width</button>
+  <button class="set-btn" id="setB">Set Height</button>
+</div>
+
+<!-- Add this button somewhere in your HTML -->
+<button class="set-btn" id="swapBtn">Swap A & B</button>
+
+
+<div id="grayBox"></div>
+
+<script>
+  const dragA = document.getElementById("dragA");
+  const dragB = document.getElementById("dragB");
+  const diffBtn = document.getElementById("diffBtn");
+  const diffResult = document.getElementById("diffResult");
+  const setAButton = document.getElementById("setA");
+  const setBButton = document.getElementById("setB");
+  const grayBox = document.getElementById("grayBox");
+
+  // Load saved values from localStorage or default to 0
+  const savedA = localStorage.getItem("dragA") || 0;
+  const savedB = localStorage.getItem("dragB") || 0;
+
+  dragA.dataset.value = parseFloat(savedA);
+  dragB.dataset.value = parseFloat(savedB);
+  dragA.textContent = savedA;
+  dragB.textContent = savedB;
+
+  function updateGrayBox() {
+    const a = parseFloat(dragA.dataset.value);
+    const b = parseFloat(dragB.dataset.value);
+    grayBox.style.width = b + "px";
+    grayBox.style.height = a + "px";
+  }
+
+  function saveValues() {
+    localStorage.setItem("dragA", dragA.dataset.value);
+    localStorage.setItem("dragB", dragB.dataset.value);
+  }
+
+  let isDragging = false;
+  let startX = 0;
+  let startA = 0;
+  let startB = 0;
+
+  function startDrag(e) {
+    isDragging = true;
+    startX = e.clientX;
+    startA = parseFloat(dragA.dataset.value);
+    startB = parseFloat(dragB.dataset.value);
+    document.body.style.cursor = "ew-resize";
+  }
+
+  dragA.addEventListener("mousedown", startDrag);
+  dragB.addEventListener("mousedown", startDrag);
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+
+    const delta = e.clientX - startX;
+    const newA = startA + delta;
+    const newB = startB + delta;
+
+    dragA.dataset.value = newA;
+    dragB.dataset.value = newB;
+
+    dragA.textContent = Math.round(newA);
+    dragB.textContent = Math.round(newB);
+
+    updateGrayBox();
+  });
+
+  window.addEventListener("mouseup", () => {
+    if (isDragging) saveValues(); // Save after dragging
+    isDragging = false;
+    document.body.style.cursor = "default";
+  });
+
+  // Difference button
+  diffBtn.addEventListener("click", () => {
+    const a = parseFloat(dragA.dataset.value);
+    const b = parseFloat(dragB.dataset.value);
+    diffResult.textContent = `Difference: ${Math.abs(b - a)}`;
+  });
+
+  // Set buttons
+  setAButton.addEventListener("click", () => {
+    const newVal = parseFloat(prompt("Enter new value for Width (A):", dragA.dataset.value));
+    if (!isNaN(newVal)) {
+      dragA.dataset.value = newVal;
+      dragA.textContent = newVal;
+      updateGrayBox();
+      saveValues();
+    }
+  });
+
+  setBButton.addEventListener("click", () => {
+    const newVal = parseFloat(prompt("Enter new value for Height (B):", dragB.dataset.value));
+    if (!isNaN(newVal)) {
+      dragB.dataset.value = newVal;
+      dragB.textContent = newVal;
+      updateGrayBox();
+      saveValues();
+    }
+  });
+
+  updateGrayBox();
+
+
+  const swapButton = document.getElementById("swapBtn");
+
+swapButton.addEventListener("click", () => {
+  // Swap dataset values
+  const temp = dragA.dataset.value;
+  dragA.dataset.value = dragB.dataset.value;
+  dragB.dataset.value = temp;
+
+  // Update displayed text
+  dragA.textContent = Math.round(dragA.dataset.value);
+  dragB.textContent = Math.round(dragB.dataset.value);
+
+  // Update gray box
+  updateGrayBox();
+
+  // Save swapped values
+  saveValues();
+});
+
+</script>
+
+
+</body>
+</html>
